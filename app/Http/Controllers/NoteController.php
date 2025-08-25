@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Note;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class NoteController extends Controller
 {
@@ -12,7 +13,8 @@ class NoteController extends Controller
      */
     public function index()
     {
-        return view('note.index');
+        $notes = Note::orderBy("created_at", "desc")->paginate();
+        return view('note.index', ['notes' => $notes]);
     }
 
     /**
@@ -28,15 +30,23 @@ class NoteController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $data = $request->validate([
+            'note' => ['required', 'string']
+        ]);
+
+        $data['user_id'] = Auth::id() ?? 1;
+
+        $note = Note::create($data);
+
+        return to_route('note.show', $note)->with('message', 'Note created successfully!');
     }
 
     /**
      * Display the specified resource.
      */
-    public function show(string $id)
+    public function show(Note $note)
     {
-        return view('show ' . $id);
+        return view('note.show ', ['note' => $note]);
     }
 
     /**
@@ -44,7 +54,7 @@ class NoteController extends Controller
      */
     public function edit(Note $note)
     {
-        return view('note.edit');
+        return view('note.edit ', ['note' => $note]);
     }
 
     /**
